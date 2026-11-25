@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musicfy - YouTube zu MP3 Konverter</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            purple: '#8b5cf6',
+                            pink: '#ec4899',
+                            cyan: '#06b6d4',
+                            dark: '#0f172a',
+                            card: 'rgba(30, 41, 59, 0.7)',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { boxShadow: '0 0 15px rgba(139, 92, 246, 0.4)' },
+                            '100%': { boxShadow: '0 0 30px rgba(236, 72, 153, 0.8)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        /* Custom Glassmorphism */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .glass-input {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .glass-input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+        /* Glowing Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, #a855f7, #ec4899, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* Neon Button Gradient */
+        .btn-gradient {
+            background: linear-gradient(135deg, #7c3aed 0%, #d946ef 50%, #06b6d4 100%);
+            background-size: 200% 200%;
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            background-position: right center;
+            box-shadow: 0 0 25px rgba(217, 70, 239, 0.6);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-pink-500 selection:text-white">
+
+    <!-- Background Ambient Glow Effects -->
+    <div class="fixed top-0 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none -z-10"></div>
+    <div class="fixed bottom-10 right-1/4 w-96 h-96 bg-pink-600/15 rounded-full blur-3xl pointer-events-none -z-10"></div>
+    <div class="fixed top-1/3 right-10 w-80 h-80 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+    <!-- Header Navigation -->
+    <header class="w-full border-b border-slate-800/80 backdrop-blur-md sticky top-0 z-50 bg-slate-950/70">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                <div class="w-10 h-10 rounded-xl btn-gradient flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <i class="fa-solid fa-music text-white text-xl"></i>
+                </div>
+                <span class="text-2xl font-extrabold tracking-tight gradient-text">Musicfy</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+                <a href="#converter" class="hover:text-pink-400 transition-colors">Konverter</a>
+                <a href="#features" class="hover:text-pink-400 transition-colors">Vorteile</a>
+                <a href="#history" class="hover:text-pink-400 transition-colors flex items-center gap-1.5">
+                    <span>Verlauf</span>
+                    <span id="history-badge" class="bg-purple-900/60 text-purple-300 text-xs px-2 py-0.5 rounded-full border border-purple-500/30">0</span>
+                </a>
+                <a href="#faq" class="hover:text-pink-400 transition-colors">FAQ</a>
+            </nav>
+
+            <!-- Quick Action -->
+            <div class="flex items-center gap-3">
+                <a href="#converter" class="px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/20 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-pink-400"></i>
+                    <span>Jetzt Starten</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col gap-12 sm:gap-16">
+
+        <!-- HERO & CONVERTER SECTION -->
+        <section id="converter" class="w-full text-center flex flex-col items-center pt-4">
+            
+            <!-- Badge -->
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs sm:text-sm font-medium mb-6 animate-pulse-slow">
+                <span class="flex h-2 w-2 rounded-full bg-pink-500"></span>
+                Schnell, Kostenlos & Ohne Registrierung
+            </div>
+
+            <h1 class="text-4xl sm:text-6xl font-black tracking-tight leading-tight max-w-3xl mb-4">
+                Wandle YouTube Videos in <span class="gradient-text">High-Quality MP3</span> um
+            </h1>
+            <p class="text-slate-400 text-base sm:text-lg max-w-2xl mb-8">
+                Lade deine Lieblingsmusik direkt in bester Audioqualität herunter (bis zu 320 kbps). Einfach Link einfügen und sofort konvertieren!
+            </p>
+
+            <!-- CONVERTER CARD -->
+            <div class="w-full glass-card rounded-2xl p-4 sm:p-8 shadow-2xl relative overflow-hidden transition-all duration-300">
+                
+                <!-- Toast Notification Container -->
+                <div id="toast-container" class="hidden mb-4 p-3 rounded-xl bg-red-900/40 border border-red-500/50 text-red-200 text-sm flex items-center gap-3 transition-all">
+                    <i class="fa-solid fa-triangle-exclamation text-red-400 text-lg"></i>
+                    <span id="toast-message">Bitte gib eine gültige YouTube-URL ein.</span>
+                </div>
+
+                <!-- Input Form -->
+                <form id="convert-form" class="flex flex-col gap-4">
+                    <div class="flex flex-col md:flex-row gap-3">
+                        <!-- URL Input -->
+                        <div class="relative flex-grow">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-brands fa-youtube text-red-500 text-xl"></i>
+                            </div>
+                            <input 
+                                type="text" 
+                                id="youtube-url" 
+                                placeholder="Füge hier den YouTube-Link ein (z.B. https://www.youtube.com/watch?v=...)" 
+                                class="w-full pl-12 pr-10 py-4 rounded-xl glass-input text-slate-100 placeholder-slate-500 focus:outline-none transition-all text-sm sm:text-base"
+                                autocomplete="off"
+                                required
+                            >
+                            <button 
+                                type="button" 
+                                id="clear-btn" 
+                                class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white"
+                                title="Feld leeren"
+                            >
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <!-- Convert Button -->
+                        <button 
+                            type="submit" 
+                            id="submit-btn" 
+                            class="btn-gradient px-8 py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-all text-base min-w-[170px]"
+                        >
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Konvertieren</span>
+                        </button>
+                    </div>
+
+                    <!-- Options Bar (Bitrate & Format) -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 pt-2 px-1 text-sm text-slate-300">
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-400 font-medium text-xs sm:text-sm">Audio-Qualität:</span>
+                            <div class="flex bg-slate-900/80 p-1 rounded-lg border border-slate-700/50">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="bitrate" value="128" class="peer sr-only">
+                                    <span class="px-3 py-1 rounded-md text-xs font-semibold block transition-all peer-checked:bg-purple-600 peer-checked:text-white text-slate-400 hover:text-slate-200">128 kbps</span>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="bitrate" value="192" class="peer sr-only">
+                                    <span class="px-3 py-1 rounded-md text-xs font-semibold block transition-all peer-checked:bg-purple-600 peer-checked:text-white text-slate-400 hover:text-slate-200">192 kbps</span>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="bitrate" value="320" class="peer sr-only" checked>
+                                    <span class="px-3 py-1 rounded-md text-xs font-semibold block transition-all peer-checked:bg-purple-600 peer-checked:text-white text-slate-400 hover:text-slate-200 flex items-center gap-1">
+                                        <span>320 kbps</span>
+                                        <span class="bg-pink-500/30 text-pink-300 text-[10px] px-1 rounded">HQ</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Sample URL quick filler -->
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="text-slate-400">Beispiel testen:</span>
+                            <button type="button" id="sample-url-btn" class="text-purple-400 hover:text-pink-400 underline transition-colors">
+                                Cyberpunk Synthwave Track
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- CONVERSION PROGRESS DISPLAY (Initially Hidden) -->
+                <div id="progress-section" class="hidden mt-8 pt-6 border-t border-slate-700/50">
+                    <div class="flex items-center justify-between mb-2 text-sm font-medium">
+                        <span id="progress-status" class="text-purple-300 flex items-center gap-2">
+                            <i class="fa-solid fa-spinner fa-spin text-pink-400"></i>
+                            Metadaten werden geladen...
+                        </span>
+                        <span id="progress-percent" class="text-pink-400 font-bold">0%</span>
+                    </div>
+
+                    <!-- Progress Bar Outer -->
+                    <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
+                        <!-- Progress Bar Inner -->
+                        <div id="progress-bar" class="h-full rounded-full btn-gradient transition-all duration-300 w-0"></div>
+                    </div>
+                </div>
+
+                <!-- DOWNLOAD & METADATA PREVIEW (Initially Hidden) -->
+                <div id="result-section" class="hidden mt-8 pt-6 border-t border-slate-700/50 text-left animate-fade-in">
+                    <div class="flex flex-col sm:flex-row items-center gap-6 bg-slate-900/60 p-5 rounded-xl border border-purple-500/30">
+                        <!-- Thumbnail Preview -->
+                        <div class="relative w-full sm:w-48 h-32 rounded-lg overflow-hidden flex-shrink-0 group shadow-md">
+                            <img id="result-thumbnail" src="" alt="Thumbnail" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <div class="w-10 h-10 rounded-full bg-pink-600/90 flex items-center justify-center text-white shadow-lg">
+                                    <i class="fa-solid fa-play text-sm ml-0.5"></i>
+                                </div>
+                            </div>
+                            <span id="result-duration" class="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-2 py-0.5 rounded">03:45</span>
+                        </div>
+
+                        <!-- Track Details & Download Button -->
+                        <div class="flex-grow flex flex-col justify-between w-full h-full">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                        <i class="fa-solid fa-check text-[10px] mr-1"></i> Konvertierung Erfolgreich
+                                    </span>
+                                    <span id="result-bitrate-badge" class="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded">320 kbps</span>
+                                </div>
+                                <h3 id="result-title" class="text-lg font-bold text-white line-clamp-1">Video Titel</h3>
+                                <p id="result-channel" class="text-sm text-slate-400 mb-4 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check text-purple-400 text-xs"></i> <span>Channel Name</span>
+                                </p>
+                            </div>
+
+                            <!-- Actions Button Group -->
+                            <div class="flex flex-wrap gap-3">
+                                <button id="download-btn" class="btn-gradient px-6 py-3 rounded-xl font-bold text-white flex-grow sm:flex-grow-0 flex items-center justify-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-transform">
+                                    <i class="fa-solid fa-download text-lg"></i>
+                                    <span>MP3 Herunterladen</span>
+                                </button>
+                                <button id="play-preview-btn" class="px-4 py-3 rounded-xl font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-2 transition-colors">
+                                    <i class="fa-solid fa-volume-high text-purple-400"></i>
+                                    <span id="play-btn-text">Probehören</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- RECENT CONVERSIONS HISTORY SECTION -->
+        <section id="history" class="w-full">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-purple-400"></i> Letzte Konvertierungen
+                    </h2>
+                    <p class="text-slate-400 text-sm">Deine kürzlich konvertierten MP3-Dateien (lokal gespeichert)</p>
+                </div>
+                <button id="clear-history-btn" class="text-xs text-slate-400 hover:text-red-400 transition-colors flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800">
+                    <i class="fa-solid fa-trash-can"></i> Verlauf leeren
+                </button>
+            </div>
+
+            <div id="history-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- History Items will be dynamically generated -->
+                <div id="history-empty" class="col-span-full glass-card rounded-xl p-8 text-center text-slate-500">
+                    <i class="fa-solid fa-compact-disc text-4xl mb-3 text-slate-600 block"></i>
+                    Noch keine Konvertierungen vorhanden. Wandle ein Video um, um deinen Verlauf zu füllen!
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES GRID SECTION -->
+        <section id="features" class="w-full pt-4">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-white mb-3">Warum <span class="gradient-text">Musicfy</span> wählen?</h2>
+                <p class="text-slate-400 max-w-xl mx-auto text-sm sm:text-base">Modernste Audio-Extraktions-Technologie kombiniert mit maximaler Benutzerfreundlichkeit.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Feature 1 -->
+                <div class="glass-card rounded-xl p-6 transition-transform hover:-translate-y-1">
+                    <div class="w-12 h-12 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-2xl mb-4 border border-purple-500/30">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">Blitzschnell</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Hochgeschwindigkeits-Server ermöglichen eine MP3-Umwandlung in sekundenschnelle.</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="glass-card rounded-xl p-6 transition-transform hover:-translate-y-1">
+                    <div class="w-12 h-12 rounded-lg bg-pink-500/20 text-pink-400 flex items-center justify-center text-2xl mb-4 border border-pink-500/30">
+                        <i class="fa-solid fa-sliders"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">Bis zu 320 kbps</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Wähle deine bevorzugte Audio-Qualität – von 128 kbps bis zu kristallklaren 320 kbps.</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="glass-card rounded-xl p-6 transition-transform hover:-translate-y-1">
+                    <div class="w-12 h-12 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-2xl mb-4 border border-cyan-500/30">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">Keine Registrierung</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Nutze alle Funktionen sofort ohne lästige Anmeldung oder Weiterleitungen.</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="glass-card rounded-xl p-6 transition-transform hover:-translate-y-1">
+                    <div class="w-12 h-12 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-4 border border-emerald-500/30">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">100% Sicher</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Garantiert frei von Viren, Popups oder Spyware. Deine Privatsphäre bleibt geschützt.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ ACCORDION SECTION -->
+        <section id="faq" class="w-full pt-4">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-extrabold text-white mb-3">Häufig gestellte Fragen (FAQ)</h2>
+                <p class="text-slate-400 text-sm sm:text-base">Alles, was du über Musicfy wissen musst</p>
+            </div>
+
+            <div class="max-w-3xl mx-auto flex flex-col gap-4">
+                <!-- FAQ Item 1 -->
+                <div class="glass-card rounded-xl border border-slate-700/50 overflow-hidden">
+                    <button class="faq-toggle w-full p-5 text-left font-semibold text-white flex justify-between items-center hover:bg-slate-800/50 transition-colors">
+                        <span>Wie wandle ich YouTube-Videos in MP3 um?</span>
+                        <i class="fa-solid fa-chevron-down text-purple-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content hidden px-5 pb-5 text-slate-400 text-sm leading-relaxed border-t border-slate-800/60 pt-3">
+                        Kopiere einfach die URL des gewünschten YouTube-Videos, füge sie oben in das Eingabefeld ein, wähle die Audio-Qualität und klicke auf "Konvertieren". Sobald der Prozess abgeschlossen ist, kannst du deine MP3-Datei herunterladen.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="glass-card rounded-xl border border-slate-700/50 overflow-hidden">
+                    <button class="faq-toggle w-full p-5 text-left font-semibold text-white flex justify-between items-center hover:bg-slate-800/50 transition-colors">
+                        <span>Ist die Nutzung von Musicfy kostenlos?</span>
+                        <i class="fa-solid fa-chevron-down text-purple-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content hidden px-5 pb-5 text-slate-400 text-sm leading-relaxed border-t border-slate-800/60 pt-3">
+                        Ja, Musicfy ist zu 100% kostenlos und erfordert keine Registrierung, Abonnements oder versteckte Gebühren.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="glass-card rounded-xl border border-slate-700/50 overflow-hidden">
+                    <button class="faq-toggle w-full p-5 text-left font-semibold text-white flex justify-between items-center hover:bg-slate-800/50 transition-colors">
+                        <span>Funktioniert Musicfy auch auf dem Smartphone?</span>
+                        <i class="fa-solid fa-chevron-down text-purple-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content hidden px-5 pb-5 text-slate-400 text-sm leading-relaxed border-t border-slate-800/60 pt-3">
+                        Absolut! Musicfy ist voll responsive und funktioniert problemlos auf allen Geräten, inklusive Android, iOS (iPhone/iPad), Tablets und Desktops.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 4 -->
+                <div class="glass-card rounded-xl border border-slate-700/50 overflow-hidden">
+                    <button class="faq-toggle w-full p-5 text-left font-semibold text-white flex justify-between items-center hover:bg-slate-800/50 transition-colors">
+                        <span>Gibt es eine Begrenzung für Downloads?</span>
+                        <i class="fa-solid fa-chevron-down text-purple-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-content hidden px-5 pb-5 text-slate-400 text-sm leading-relaxed border-t border-slate-800/60 pt-3">
+                        Nein, du kannst so viele Videos konvertieren und herunterladen, wie du möchtest. Es gibt kein Tageslimit.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full border-t border-slate-800/80 bg-slate-950/90 py-8 px-4 mt-16 text-center text-xs text-slate-500">
+        <div class="max-w-5xl mx-auto flex flex-col items-center gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md btn-gradient flex items-center justify-center text-white text-xs">
+                    <i class="fa-solid fa-music"></i>
+                </div>
+                <span class="font-bold text-slate-300">Musicfy</span>
+            </div>
+            
+            <p class="max-w-xl text-slate-400 leading-relaxed">
+                <strong class="text-slate-300">Haftungsausschluss:</strong> Diese Webseite ist eine interaktive Frontend-Demonstration. Es werden keine urheberrechtlich geschützten Inhalte direkt von YouTube-Servern extrahiert. Alle Audiogenerierungen erfolgen synthetisch zur Veranschaulichung der Benutzeroberfläche.
+            </p>
+
+            <div class="flex gap-6 text-slate-400 pt-2">
+                <a href="#" class="hover:text-purple-400 transition-colors">Datenschutz</a>
+                <a href="#" class="hover:text-purple-400 transition-colors">Nutzungsbedingungen</a>
+                <a href="#" class="hover:text-purple-400 transition-colors">Impressum</a>
+            </div>
+
+            <p class="text-slate-600 mt-2">&copy; 2026 Musicfy. Alle Rechte vorbehalten.</p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const urlInput = document.getElementById('youtube-url');
+            const clearBtn = document.getElementById('clear-btn');
+            const convertForm = document.getElementById('convert-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const sampleUrlBtn = document.getElementById('sample-url-btn');
+            
+            const toastContainer = document.getElementById('toast-container');
+            const toastMessage = document.getElementById('toast-message');
+
+            const progressSection = document.getElementById('progress-section');
+            const progressBar = document.getElementById('progress-bar');
+            const progressStatus = document.getElementById('progress-status');
+            const progressPercent = document.getElementById('progress-percent');
+
+            const resultSection = document.getElementById('result-section');
+            const resultThumbnail = document.getElementById('result-thumbnail');
+            const resultTitle = document.getElementById('result-title');
+            const resultChannel = document.getElementById('result-channel');
+            const resultDuration = document.getElementById('result-duration');
+            const resultBitrateBadge = document.getElementById('result-bitrate-badge');
+
+            const downloadBtn = document.getElementById('download-btn');
+            const playPreviewBtn = document.getElementById('play-preview-btn');
+            const playBtnText = document.getElementById('play-btn-text');
+
+            const historyList = document.getElementById('history-list');
+            const historyEmpty = document.getElementById('history-empty');
+            const clearHistoryBtn = document.getElementById('clear-history-btn');
+            const historyBadge = document.getElementById('history-badge');
+
+            // Mock Data for realistic simulation based on video query/ID
+            const mockTracks = [
+                {
+                    title: "Synthwave Sunset - Cyberpunk Beats 2026",
+                    channel: "Neon Vibes Music",
+                    duration: "03:42",
+                    thumbnail: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500&auto=format&fit=crop&q=80"
+                },
+                {
+                    title: "Lofi Hip Hop Radio - Beats to Study / Relax to",
+                    channel: "Chillhop Records",
+                    duration: "04:15",
+                    thumbnail: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80"
+                },
+                {
+                    title: "Epic Orchestral Cinematic Trailer Theme",
+                    channel: "Audio Waves Studio",
+                    duration: "02:50",
+                    thumbnail: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=500&auto=format&fit=crop&q=80"
+                },
+                {
+                    title: "Deep House Summer Vocal Mix #42",
+                    channel: "Sunset Lounge",
+                    duration: "05:10",
+                    thumbnail: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80"
+                }
+            ];
+
+            // Web Audio API Synth Player for live preview simulation
+            let audioCtx = null;
+            let currentOscillator = null;
+            let isPlaying = false;
+            let activeTrackData = null;
+
+            // Load History from localStorage
+            let conversionHistory = JSON.parse(localStorage.getItem('musicfy_history') || '[]');
+            renderHistory();
+
+            // Toggle Input Clear Button
+            urlInput.addEventListener('input', () => {
+                if (urlInput.value.trim().length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+                hideToast();
+            });
+
+            clearBtn.addEventListener('click', () => {
+                urlInput.value = '';
+                clearBtn.classList.add('hidden');
+                urlInput.focus();
+                hideToast();
+            });
+
+            // Quick Sample Link Click
+            sampleUrlBtn.addEventListener('click', () => {
+                urlInput.value = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+                clearBtn.classList.remove('hidden');
+                hideToast();
+            });
+
+            // Form Submit / Convert Logic
+            convertForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const url = urlInput.value.trim();
+
+                if (!validateYouTubeUrl(url)) {
+                    showToast("Bitte gib eine gültige YouTube-URL ein (z.B. youtube.com oder youtu.be)");
+                    return;
+                }
+
+                hideToast();
+                startConversionSimulation();
+            });
+
+            // Validate YouTube URL Pattern
+            function validateYouTubeUrl(url) {
+                const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+                return pattern.test(url);
+            }
+
+            function showToast(msg) {
+                toastMessage.textContent = msg;
+                toastContainer.classList.remove('hidden');
+            }
+
+            function hideToast() {
+                toastContainer.classList.add('hidden');
+            }
+
+            // Simulated Conversion Pipeline
+            function startConversionSimulation() {
+                // UI State Updates
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                resultSection.classList.add('hidden');
+                progressSection.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                
+                // Pick a mock track metadata randomly or deterministically
+                const trackIndex = Math.floor(Math.random() * mockTracks.length);
+                const selectedBitrate = document.querySelector('input[name="bitrate"]:checked').value;
+                activeTrackData = {
+                    ...mockTracks[trackIndex],
+                    bitrate: selectedBitrate,
+                    id: Date.now()
+                };
+
+                const stages = [
+                    { percent: 20, text: "Metadaten laden...", delay: 600 },
+                    { percent: 50, text: "Audio-Stream extrahieren...", delay: 1200 },
+                    { percent: 80, text: `Konvertiere zu MP3 (${selectedBitrate} kbps)...`, delay: 2000 },
+                    { percent: 100, text: "Fertiggestellt!", delay: 2600 }
+                ];
+
+                stages.forEach((stage) => {
+                    setTimeout(() => {
+                        progressBar.style.width = `${stage.percent}%`;
+                        progressPercent.textContent = `${stage.percent}%`;
+                        
+                        if (stage.percent < 100) {
+                            progressStatus.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-pink-400"></i> ${stage.text}`;
+                        } else {
+                            progressStatus.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${stage.text}`;
+                            onConversionComplete();
+                        }
+                    }, stage.delay);
+                });
+            }
+
+            function onConversionComplete() {
+                setTimeout(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                    // Populate Result Display
+                    resultThumbnail.src = activeTrackData.thumbnail;
+                    resultTitle.textContent = activeTrackData.title;
+                    resultChannel.querySelector('span').textContent = activeTrackData.channel;
+                    resultDuration.textContent = activeTrackData.duration;
+                    resultBitrateBadge.textContent = `${activeTrackData.bitrate} kbps`;
+
+                    resultSection.classList.remove('hidden');
+                    resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                    // Save to history
+                    saveToHistory(activeTrackData);
+                }, 400);
+            }
+
+            // Generate Simulated MP3 Audio File Download via Blob / Web Audio API
+            downloadBtn.addEventListener('click', () => {
+                if (!activeTrackData) return;
+
+                // Create synthetic audio snippet
+                const sampleRate = 44100;
+                const duration = 2; // 2 seconds dummy audio
+                const numFrames = sampleRate * duration;
+                
+                // WAV Header Generation helper for valid audio file
+                const buffer = new ArrayBuffer(44 + numFrames * 2);
+                const view = new DataView(buffer);
+
+                /* RIFF identifier */
+                writeString(view, 0, 'RIFF');
+                /* file length */
+                view.setUint32(4, 36 + numFrames * 2, true);
+                /* RIFF type */
+                writeString(view, 8, 'WAVE');
+                /* format chunk identifier */
+                writeString(view, 12, 'fmt ');
+                /* format chunk length */
+                view.setUint32(16, 16, true);
+                /* sample format (raw) */
+                view.setUint16(20, 1, true);
+                /* channel count */
+                view.setUint16(22, 1, true);
+                /* sample rate */
+                view.setUint32(24, sampleRate, true);
+                /* byte rate (sample rate * block align) */
+                view.setUint32(28, sampleRate * 2, true);
+                /* block align */
+                view.setUint16(32, 2, true);
+                /* bits per sample */
+                view.setUint16(34, 16, true);
+                /* data chunk identifier */
+                writeString(view, 36, 'data');
+                /* data chunk length */
+                view.setUint32(40, numFrames * 2, true);
+
+                // Write synthetic sine wave samples
+                const frequency = 440; // A4 tone
+                for (let i = 0; i < numFrames; i++) {
+                    const sample = Math.sin((2 * Math.PI * frequency * i) / sampleRate);
+                    const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    view.setInt16(44 + i * 2, intSample, true);
+                }
+
+                const blob = new Blob([buffer], { type: 'audio/mp3' });
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                
+                // Clean filename
+                const safeTitle = activeTrackData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                a.download = `${safeTitle}_${activeTrackData.bitrate}kbps.mp3`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(downloadUrl);
+            });
+
+            function writeString(view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+
+            // Web Audio API Audio Preview Playback
+            playPreviewBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    stopAudioPreview();
+                } else {
+                    startAudioPreview();
+                }
+            });
+
+            function startAudioPreview() {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    currentOscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+
+                    // Melodic synth effect sequence
+                    currentOscillator.type = 'sine';
+                    currentOscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+                    currentOscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 1);
+
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2);
+
+                    currentOscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    currentOscillator.start();
+                    isPlaying = true;
+                    playBtnText.textContent = "Stoppen";
+                    playPreviewBtn.classList.add('bg-purple-900/60', 'text-purple-300');
+
+                    currentOscillator.onended = () => {
+                        stopAudioPreview();
+                    };
+                    
+                    setTimeout(() => {
+                        if (isPlaying) stopAudioPreview();
+                    }, 2000);
+                } catch (e) {
+                    console.log('Audio playback prevented', e);
+                }
+            }
+
+            function stopAudioPreview() {
+                if (currentOscillator) {
+                    try { currentOscillator.stop(); } catch(e){}
+                }
+                if (audioCtx) {
+                    try { audioCtx.close(); } catch(e){}
+                }
+                isPlaying = false;
+                playBtnText.textContent = "Probehören";
+                playPreviewBtn.classList.remove('bg-purple-900/60', 'text-purple-300');
+            }
+
+            // History Management
+            function saveToHistory(track) {
+                // Avoid duplicates at top
+                conversionHistory = conversionHistory.filter(item => item.title !== track.title);
+                conversionHistory.unshift(track);
+                
+                // Limit to 6 items
+                if (conversionHistory.length > 6) {
+                    conversionHistory.pop();
+                }
+
+                localStorage.setItem('musicfy_history', JSON.stringify(conversionHistory));
+                renderHistory();
+            }
+
+            function renderHistory() {
+                historyBadge.textContent = conversionHistory.length;
+
+                if (conversionHistory.length === 0) {
+                    historyEmpty.classList.remove('hidden');
+                    historyList.querySelectorAll('.history-card').forEach(el => el.remove());
+                    return;
+                }
+
+                historyEmpty.classList.add('hidden');
+                
+                // Remove existing item cards
+                historyList.querySelectorAll('.history-card').forEach(el => el.remove());
+
+                conversionHistory.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'history-card glass-card rounded-xl p-4 flex items-center gap-3 border border-slate-800 hover:border-purple-500/30 transition-all';
+                    card.innerHTML = `
+                        <img src="${item.thumbnail}" alt="Thumbnail" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">
+                        <div class="flex-grow min-w-0">
+                            <h4 class="text-sm font-bold text-white truncate">${item.title}</h4>
+                            <p class="text-xs text-slate-400 truncate">${item.channel}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[10px] bg-purple-900/50 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/20">${item.bitrate} kbps</span>
+                                <span class="text-[10px] text-slate-500">${item.duration}</span>
+                            </div>
+                        </div>
+                        <button class="re-download-btn w-9 h-9 rounded-lg bg-slate-800 hover:bg-purple-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors flex-shrink-0" title="Erneut herunterladen">
+                            <i class="fa-solid fa-download text-xs"></i>
+                        </button>
+                    `;
+
+                    // Re-download event trigger
+                    card.querySelector('.re-download-btn').addEventListener('click', () => {
+                        activeTrackData = item;
+                        downloadBtn.click();
+                    });
+
+                    historyList.appendChild(card);
+                });
+            }
+
+            clearHistoryBtn.addEventListener('click', () => {
+                conversionHistory = [];
+                localStorage.removeItem('musicfy_history');
+                renderHistory();
+            });
+
+            // Accordion Logic for FAQ
+            const faqToggles = document.querySelectorAll('.faq-toggle');
+            faqToggles.forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    const content = toggle.nextElementSibling;
+                    const icon = toggle.querySelector('i');
+
+                    // Toggle Current
+                    content.classList.toggle('hidden');
+                    icon.classList.toggle('rotate-180');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
